@@ -78,7 +78,101 @@ namespace UABEAvalonia
             dataGrid.SelectionChanged += DataGrid_SelectionChanged;
             Closing += InfoWindow_Closing;
 
+            // 自定义按钮绑定事件
+            exportMonoBehaviour.Click += ExportMonoBehaviour_Click;
+            importMonoBehaviour.Click += ImportMonoBehaviour_Click;
+
             ignoreCloseEvent = false;
+        }
+
+        // 事件处理函数
+        private async void ExportMonoBehaviour_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            // 询问用户是否要过滤名称包含"text"的资产
+            MessageBoxResult filterChoice = await MessageBoxUtil.ShowDialog(this,
+                "Export Filter", "Do you want to export only MonoBehaviour assets with names containing 'text'?",
+                MessageBoxType.YesNoCancel);
+            
+            string nameFilter = null;
+            if (filterChoice == MessageBoxResult.Yes)
+            {
+                nameFilter = "text";
+            }
+            else if (filterChoice == MessageBoxResult.Cancel)
+            {
+                return; // 用户取消操作
+            }
+
+            // 获取MonoBehaviour资产（根据过滤选项）
+            List<AssetContainer> monoBehaviours = GetAllMonoBehaviourAssets(nameFilter);
+            
+            if (monoBehaviours.Count == 0)
+            {
+                string message = nameFilter != null ? 
+                    $"No MonoBehaviour assets found with names containing '{nameFilter}'." : 
+                    "No MonoBehaviour assets found.";
+                await MessageBoxUtil.ShowDialog(this, "Info", message);
+                return;
+            }
+
+            await BatchExportDump(monoBehaviours);
+        }
+
+        // 事件处理函数 - 导入MonoBehaviour
+        private async void ImportMonoBehaviour_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            // 询问用户是否要过滤名称包含"text"的资产
+            MessageBoxResult filterChoice = await MessageBoxUtil.ShowDialog(this,
+                "Import Filter", "Do you want to import only MonoBehaviour assets with names containing 'text'?",
+                MessageBoxType.YesNoCancel);
+            
+            string nameFilter = null;
+            if (filterChoice == MessageBoxResult.Yes)
+            {
+                nameFilter = "text";
+            }
+            else if (filterChoice == MessageBoxResult.Cancel)
+            {
+                return; // 用户取消操作
+            }
+
+            // 获取MonoBehaviour资产（根据过滤选项）
+            List<AssetContainer> monoBehaviours = GetAllMonoBehaviourAssets(nameFilter);
+            
+            if (monoBehaviours.Count == 0)
+            {
+                string message = nameFilter != null ? 
+                    $"No MonoBehaviour assets found with names containing '{nameFilter}'." : 
+                    "No MonoBehaviour assets found.";
+                await MessageBoxUtil.ShowDialog(this, "Info", message);
+                return;
+            }
+
+            await BatchImportDump(monoBehaviours);
+        }
+
+        // 获取所有MonoBehaviour资产
+        private List<AssetContainer> GetAllMonoBehaviourAssets(string nameFilter = null)
+        {
+            List<AssetContainer> monoBehaviours = new List<AssetContainer>();
+            
+            foreach (AssetContainer container in Workspace.LoadedAssets.Values)
+            {
+                // MonoBehaviour的ClassID是114
+                if (container.ClassId == 114)
+                {
+                    // 获取资产名称
+                    AssetNameUtils.GetDisplayNameFast(Workspace, container, false, out string assetName, out string _);
+                    
+                    // 如果没有名称过滤，或者名称包含过滤文本，则添加
+                    if (nameFilter == null || assetName.IndexOf(nameFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        monoBehaviours.Add(container);
+                    }
+                }
+            }
+            
+            return monoBehaviours;
         }
 
         private void InfoWindow_KeyDown(object? sender, KeyEventArgs e)

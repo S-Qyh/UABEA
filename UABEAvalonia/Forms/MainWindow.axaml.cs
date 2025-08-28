@@ -31,14 +31,20 @@ namespace UABEAvalonia
         public MainWindow()
         {
             // has to happen BEFORE initcomponent
+
+            // 先初始化工作区
             Workspace = new BundleWorkspace();
+
+            // 窗口初始化完成事件
             Initialized += MainWindow_Initialized;
 
-            InitializeComponent();
+            InitializeComponent();  // 必须在事件绑定之前初始化 XAML
 #if DEBUG
-            this.AttachDevTools();
+            this.AttachDevTools(); // 调试模式启用开发工具
 #endif
             //generated events
+            // 绑定菜单点击事件
+
             menuOpen.Click += MenuOpen_Click;
             menuLoadPackageFile.Click += MenuLoadPackageFile_Click;
             menuClose.Click += MenuClose_Click;
@@ -57,6 +63,9 @@ namespace UABEAvalonia
             btnImportAll.Click += BtnImportAll_Click;
             btnRename.Click += BtnRename_Click;
             Closing += MainWindow_Closing;
+
+            // 给新菜单绑定事件
+            // menuItemBatchProcessor.Click += MenuItemBatchProcessor_Click;
 
             changesUnsaved = false;
             changesMade = false;
